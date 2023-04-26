@@ -1,10 +1,12 @@
 # user-auth
-User Auth : Django
+# User Auth : Django
+
 This is a Django project that can be implemented using Django REST framework. The feature 
 is related to user registration and login and involves the use of OTP (One-Time Password) verification to ensure 
 that only verified users can log in to the application.
 
-Setup
+# Setup
+
 Important : Python3.10 should be used while working on this project.
 The first thing to do is to clone the repository:
 
@@ -32,9 +34,7 @@ DATABASES = {
         'PORT': 5432,
     }
 }
+
 Now run following commands:
-(venv)$ python manage.py migrate (if you are using this project first time in your system)
 (venv)$ python manage.py runserver
 And navigate to http://127.0.0.1:8000/apidoc/ to open swagger to access APIs.
-
-
