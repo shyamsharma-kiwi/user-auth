@@ -80,13 +80,14 @@ WSGI_APPLICATION = 'user_auth.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'auth_user_db',
-        'USER': 'postgres',
-        'PASSWORD': 'root',
+        'NAME': 'userauth_db',
+        'USER': 'instaworld',
+        'PASSWORD': 'instaworld',
         'HOST': 'localhost',
         'PORT': 5432,
     }
 }
+
 
 
 # Password validation
@@ -178,3 +179,11 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )}
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mohd.asad@kiwitech.com'
+EMAIL_HOST_PASSWORD = '3339khanasad'
+
