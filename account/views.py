@@ -1,14 +1,16 @@
-from rest_framework.mixins import CreateModelMixin
-from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
 import random
 from rest_framework import serializers
 from account.models import UserRegister
 from account.serializers import UserLoginSerializer, LogInVerifyOTPSerializer
 from account.utility import send_otp, get_tokens_for_user
 from rest_framework import status
+from rest_framework.mixins import CreateModelMixin
+from rest_framework.permissions import AllowAny
+from django.contrib.auth.models import User
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.response import Response
+from account.serializers import UserSignUpSerializer
 from rest_framework.views import APIView
-
 
 class LoginView(GenericViewSet, CreateModelMixin):
     """
@@ -53,4 +55,29 @@ class VerifyUserOTPView(GenericViewSet, CreateModelMixin):
             token = get_tokens_for_user(user)
             return Response({'token': token, 'message': 'OTP verified successfully and account activated!'
                              }, status=status.HTTP_200_OK)
+
+
+class SignUp(GenericViewSet, CreateModelMixin):
+    """View to register user"""
+    queryset = User.objects.all()
+    serializer_class = UserSignUpSerializer
+    permission_classes = [AllowAny, ]
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.create(serializer.validated_data)
+            return Response({"message": "User created successfully"},
+                            status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyOTPView(APIView):
+    def post(self, request):
+        serializer = VerifyOTPSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'OTP verified successfully and account activated!'
+                            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
