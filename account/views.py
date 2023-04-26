@@ -1,18 +1,9 @@
-from django.shortcuts import render
 
-# Create your views here.
-from django.shortcuts import render
+from rest_framework import status
 
-# Create your views here.
-from django.contrib.auth import logout
-from django.db.models import Q
-from rest_framework import serializers, generics, viewsets, mixins, status, filters
-from django.shortcuts import get_object_or_404
+from rest_framework.mixins import CreateModelMixin
+from rest_framework.permissions import AllowAny
 
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, UpdateModelMixin, ListModelMixin
-from rest_framework.permissions import IsAdminUser, AllowAny
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
