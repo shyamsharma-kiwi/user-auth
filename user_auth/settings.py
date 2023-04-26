@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'user_auth.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'auth_user_db',
+        'NAME': 'authuser_db',
         'USER': 'postgres',
         'PASSWORD': 'root',
         'HOST': 'localhost',
@@ -170,7 +170,12 @@ SWAGGER_SETTINGS = {
         'Bearer': []
     }
 }
-
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mohd.asad@kiwitech.com'
+EMAIL_HOST_PASSWORD = '3339khanasad'
 
 REST_FRAMEWORK = {
     'AUTHENTICATION_CLASSES': 'rest_framework.authentication.TokenAuthentication',
@@ -178,3 +183,4 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )}
+
