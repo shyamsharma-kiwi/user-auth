@@ -16,14 +16,3 @@ class UserRegister(models.Model):
     is_active = models.BooleanField(default=False)
     otp = models.CharField(max_length=6, null=True, blank=True)
     created_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        """
-            Function to hash password.
-        """
-        self.password = make_password(self.password)
-        self.created_at = timezone.now()
-        super().save(*args, **kwargs)
-
-    class Meta:
-        db_table = "account_userregister"

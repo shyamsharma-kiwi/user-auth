@@ -80,9 +80,9 @@ WSGI_APPLICATION = 'user_auth.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'userauth_db',
-        'USER': 'instaworld',
-        'PASSWORD': 'instaworld',
+        'NAME': 'authuser_db',
+        'USER': 'postgres',
+        'PASSWORD': 'root',
         'HOST': 'localhost',
         'PORT': 5432,
     }

@@ -1,6 +1,9 @@
 import sys
 from account.models import UserRegister
 from account.utility import send_otp
+from django.contrib.auth.hashers import make_password
+
+
 sys.path.append("..")
 from datetime import timezone
 from random import random
@@ -84,7 +87,7 @@ class UserSignUpSerializer(serializers.ModelSerializer):
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             email=validated_data['email'],
-            password=validated_data['password'],
+            password=make_password(validated_data['password']),
             otp=otp,
         )
 
@@ -101,6 +104,29 @@ class VerifyOTPSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid OTP')
         elif (timezone.now() - otp_obj.created_at).seconds > 300:
             raise serializers.ValidationError('OTP expired')
+        return value
+
+    def create(self, validated_data):
+        otp = validated_data.get('otp')
+        otp_obj = UserRegister.objects.filter(otp=otp).first()
+        otp_obj.is_active = True
+        otp_obj.save()
+        return validated_data
+
+
+class UserLoginSerializer(serializers.Serializer):
+    password = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+
+
+class LogInVerifyOTPSerializer(serializers.Serializer):
+    otp = serializers.CharField(max_length=6)
+    email = serializers.EmailField(required=True)
+
+    def validate_otp(self, value):
+        otp_obj = UserRegister.objects.filter(otp=value).first()
+        if not otp_obj:
+            raise serializers.ValidationError('Invalid OTP')
         return value
 
     def create(self, validated_data):
