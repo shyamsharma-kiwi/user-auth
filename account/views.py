@@ -5,7 +5,9 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
-from account import serializers
+from rest_framework import serializers
+
+from account.messages import ERROR_CODE, SUCCESS_CODE
 from account.models import UserRegister
 from account.serializers import UserSignUpSerializer, VerifyOTPSerializer, UserLoginSerializer, LogInVerifyOTPSerializer
 from rest_framework.views import APIView
@@ -26,7 +28,8 @@ class SignUp(GenericViewSet, CreateModelMixin):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid(raise_exception=True):
             user = serializer.create(serializer.validated_data)
-            return Response({"message": "User created successfully"},
+            return Response({"message": "User created successfully. Please check your registered email for "
+                                        "OTP to activate your account."},
                             status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -37,7 +40,7 @@ class VerifyOTPView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'OTP verified successfully and account activated!'
-                            }, status=status.HTTP_200_OK)
+                             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -70,18 +73,16 @@ class LoginView(GenericViewSet, CreateModelMixin):
         if serializer.is_valid():
             email = request.data["email"]
             password = request.data["password"]
-            if email is None:
-                raise serializers.ValidationError('An email address is required to log in.')
-
-            if password is None:
-                raise serializers.ValidationError('A password is required to log in.')
             number = random.randint(100000, 999999)
             user = UserRegister.objects.get(email=email)
-            if check_password(password, user.password):
-                user.otp = number
-                user.save()
-                send_otp(self, email, number)
-                return Response("otp generated success")
+            if user.is_active:
+                if check_password(password, user.password):
+                    user.otp = number
+                    user.save()
+                    send_otp(self, email, number)
+                    return Response({"detail": SUCCESS_CODE['2000']})
+            else:
+                raise serializers.ValidationError({"detail": ERROR_CODE['4003']})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -122,4 +123,5 @@ class VerifyUserOTPView(GenericViewSet, CreateModelMixin):
             token = get_tokens_for_user(user)
             return Response({'token': token, 'message': 'OTP verified successfully and account activated!'
                              }, status=status.HTTP_200_OK)
-
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

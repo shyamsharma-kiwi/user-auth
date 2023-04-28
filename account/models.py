@@ -1,8 +1,5 @@
-from django.utils import timezone
 from django.db import models
-from django.contrib.auth.hashers import make_password
-
-# Create your models here.
+from django.contrib.auth.hashers import check_password as django_check_password
 
 
 class UserRegister(models.Model):
@@ -16,3 +13,6 @@ class UserRegister(models.Model):
     is_active = models.BooleanField(default=False)
     otp = models.CharField(max_length=6, null=True, blank=True)
     created_at = models.DateTimeField(auto_now=True)
+
+    def check_password(self, raw_password):
+        return django_check_password(raw_password, self.password)

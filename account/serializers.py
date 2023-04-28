@@ -1,19 +1,19 @@
 import sys
+
+from account.constants import MODEL_CONSTANT
+from account.messages import ERROR_CODE
 from account.models import UserRegister
 from account.utility import send_otp
 from django.contrib.auth.hashers import make_password
 
-
 sys.path.append("..")
 from datetime import timezone
 from random import random
-
 from rest_framework import serializers
 import re
 import sys
 
 sys.path.append("..")
-
 import random
 from django.utils import timezone
 
@@ -118,20 +118,46 @@ class UserLoginSerializer(serializers.Serializer):
     password = serializers.CharField(required=True)
     email = serializers.EmailField(required=True)
 
+    def validate(self, data):
+        # Validate email
+        email = data.get('email')
+        if not email:
+            raise serializers.ValidationError({"detail": ERROR_CODE['4004']})
+        if not UserRegister.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"detail": ERROR_CODE['4005']})
+
+        # Validate password
+        password = data.get('password')
+        if not password:
+            raise serializers.ValidationError({"detail": ERROR_CODE['4006']})
+        user = UserRegister.objects.get(email=email)
+        if not user.check_password(password) and user.is_active == True:
+            raise serializers.ValidationError({"detail": ERROR_CODE['4007']})
+        return data
+
 
 class LogInVerifyOTPSerializer(serializers.Serializer):
-    otp = serializers.CharField(max_length=6)
+    otp = serializers.CharField(max_length=MODEL_CONSTANT['max_length_otp'])
     email = serializers.EmailField(required=True)
 
-    def validate_otp(self, value):
-        otp_obj = UserRegister.objects.filter(otp=value).first()
-        if not otp_obj:
-            raise serializers.ValidationError('Invalid OTP')
-        return value
+    def validate(self, data):
+        try:
+            user_obj = UserRegister.objects.get(email=data.get('email'))
+            if user_obj.otp != data.get('otp'):
+                raise serializers.ValidationError({"detail": ERROR_CODE['4001']})
+        except UserRegister.DoesNotExist:
+            raise serializers.ValidationError({"detail": ERROR_CODE['4002']})
+        return data
 
     def create(self, validated_data):
         otp = validated_data.get('otp')
-        otp_obj = UserRegister.objects.filter(otp=otp).first()
-        otp_obj.is_active = True
-        otp_obj.save()
+        email = validated_data.get('email')
+        otp_obj = UserRegister.objects.filter(email=email, otp=otp).first()
+        user = UserRegister.objects.get(email=email)
+        if user.is_active:
+            if otp_obj:
+                otp_obj.is_active = True
+                otp_obj.save()
+        else:
+            raise serializers.ValidationError({"detail": ERROR_CODE['4003']})
         return validated_data
