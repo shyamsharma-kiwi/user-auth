@@ -45,7 +45,9 @@ accounts messages file
 """
 
 SUCCESS_CODE = {
-    '2000': 'OTP Generate success.'
+    '2000': 'OTP Generate success.',
+    '2001': 'OTP verified successfully and account activated!'
+
 }
 
 ERROR_CODE = {

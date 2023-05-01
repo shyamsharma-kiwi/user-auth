@@ -164,7 +164,7 @@ class VerifyUserOTPView(GenericViewSet, CreateModelMixin):
             serializer.save()
             user = UserRegister.objects.get(email=request.data.get('email'), otp=request.data.get('otp'))
             token = get_tokens_for_user(user)
-            return Response({'token': token, 'message': 'OTP verified successfully and account activated!'
+            return Response({'token': token, 'message': SUCCESS_CODE['2001']
                              }, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

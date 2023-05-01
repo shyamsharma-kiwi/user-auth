@@ -114,7 +114,6 @@ class VerifyOTPSerializer(serializers.Serializer):
         otp = validated_data.get('otp')
         email = validated_data.get('email')
         otp_obj = UserRegister.objects.filter(email=email, otp=otp).first()
-        user = UserRegister.objects.get(email=email)
         if otp_obj:
             otp_obj.is_active = True
             otp_obj.save()
@@ -157,14 +156,4 @@ class LogInVerifyOTPSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-        otp = validated_data.get('otp')
-        email = validated_data.get('email')
-        otp_obj = UserRegister.objects.filter(email=email, otp=otp).first()
-        user = UserRegister.objects.get(email=email)
-        if user.is_active:
-            if otp_obj:
-                otp_obj.is_active = True
-                otp_obj.save()
-        else:
-            raise serializers.ValidationError({"detail": ERROR_CODE['4003']})
         return validated_data
