@@ -7,10 +7,11 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 from rest_framework import serializers
 
+from account.constants import *
+from account.messages import VIEWS_MESSAGES
 from account.messages import ERROR_CODE, SUCCESS_CODE
 from account.models import UserRegister
 from account.serializers import UserSignUpSerializer, VerifyOTPSerializer, UserLoginSerializer, LogInVerifyOTPSerializer
-from rest_framework.views import APIView
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.hashers import check_password
@@ -24,22 +25,64 @@ class SignUp(GenericViewSet, CreateModelMixin):
     permission_classes = [AllowAny, ]
     http_method_names = ['post']
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_PASSWORD),
+                'confirm_password': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_PASSWORD),
+            }
+        ),
+        responses={
+            201: VIEWS_MESSAGES['signup']['success'],
+            400: VIEWS_MESSAGES['signup']['invalid'],
+            401: VIEWS_MESSAGES['signup']['unauthorized']
+        }
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid(raise_exception=True):
             user = serializer.create(serializer.validated_data)
-            return Response({"message": "User created successfully. Please check your registered email for "
-                                        "OTP to activate your account."},
+            return Response({"message": VIEWS_MESSAGES['signup']['success']},
                             status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class VerifyOTPView(APIView):
-    def post(self, request):
+class VerifyOTPView(GenericViewSet, CreateModelMixin):
+    """
+    This Api is to verify the OTP send on email
+   """
+    serializer_class = VerifyOTPSerializer
+    queryset = UserRegister.objects.all()
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL,
+                                        example='user@example.com'),
+                'otp': openapi.Schema(type=openapi.TYPE_STRING,
+                                      minLength=max_length_otp,
+                                      maxLength=max_length_otp,
+                                      example='123456'),
+            }
+        ),
+        responses={
+            200: VIEWS_MESSAGES['otp_verification']['verified'],
+            400: VIEWS_MESSAGES['otp_verification']['invalid'],
+            401: VIEWS_MESSAGES['otp_verification']['unauthorized']
+        }
+    )
+    def create(self, request, *args, **kwargs):
         serializer = VerifyOTPSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'OTP verified successfully and account activated!'
+            user = UserRegister.objects.get(email=request.data.get('email'), otp=request.data.get('otp'))
+
+            return Response({'message': VIEWS_MESSAGES['otp_verification']['verified']
                              }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -121,7 +164,7 @@ class VerifyUserOTPView(GenericViewSet, CreateModelMixin):
             serializer.save()
             user = UserRegister.objects.get(email=request.data.get('email'), otp=request.data.get('otp'))
             token = get_tokens_for_user(user)
-            return Response({'token': token, 'message': 'OTP verified successfully and account activated!'
+            return Response({'token': token, 'message': SUCCESS_CODE['2001']
                              }, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
